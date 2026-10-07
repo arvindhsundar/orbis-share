@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Map</title>
+<style>
+/* Fonts ship with the app (no internet needed). build.js inlines them. */
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: normal; font-weight: 400; font-display: block; src: url(fonts/BarlowSemiCondensed-400.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: italic; font-weight: 400; font-display: block; src: url(fonts/BarlowSemiCondensed-400i.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: normal; font-weight: 500; font-display: block; src: url(fonts/BarlowSemiCondensed-500.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: italic; font-weight: 500; font-display: block; src: url(fonts/BarlowSemiCondensed-500i.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: normal; font-weight: 600; font-display: block; src: url(fonts/BarlowSemiCondensed-600.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: normal; font-weight: 700; font-display: block; src: url(fonts/BarlowSemiCondensed-700.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: italic; font-weight: 700; font-display: block; src: url(fonts/BarlowSemiCondensed-700i.woff2) format('woff2'); }
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 400; font-display: block; src: url(fonts/IBMPlexMono-400.woff2) format('woff2'); }
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 500; font-display: block; src: url(fonts/IBMPlexMono-500.woff2) format('woff2'); }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0c0a1c;
+  --surface: #161330;
+  --surface2: #201c40;
+  --border: #302a58;
+  --text: #ede8ff;
+  --text-muted: #8878c0;
+  --accent: #f06820;
+  --accent-hover: #ff7a2e;
+  --node-default-bg: #1a1638;
+  --node-default-border: #4c4480;
+  --node-selected-border: #f06820;
+  --node-purple-bg: #1e1a38; --node-purple-border: #7b5ea7;
+  --node-green-bg:  #141f1a; --node-green-border:  #3d8c60;
+  --node-amber-bg:  #201600; --node-amber-border:  #c07818;
+  --node-coral-bg:  #201010; --node-coral-border:  #c04040;
+  --node-teal-bg:   #0c1820; --node-teal-border:   #2a8098;
+  --node-blue-bg:   #0e1228; --node-blue-border:   #3060c0;
+  --node-pink-bg:   #200c22; --node-pink-border:   #b030a0;
+  --shadow: 0 2px 14px rgba(0,0,0,0.7);
+}
+
+[data-theme=light] {
+  --bg: #f0ecfc;
+  --surface: #ffffff;
+  --surface2: #e4ddf8;
+  --border: #c8bee8;
+  --text: #120c2e;
+  --text-muted: #5c5288;
+  --accent: #d45a08;
+  --accent-hover: #f06820;
+  --node-default-bg: #ffffff;
+  --node-default-border: #a898d8;
+  --node-selected-border: #d45a08;
+  --node-purple-bg: #f0ecfc; --node-purple-border: #7b5ea7;
+  --node-green-bg:  #ecf8f0; --node-green-border:  #3d8c60;
+  --node-amber-bg:  #fcf4e4; --node-amber-border:  #c07818;
+  --node-coral-bg:  #fcecec; --node-coral-border:  #c04040;
+  --node-teal-bg:   #e8f4f8; --node-teal-border:   #2a8098;
+  --node-blue-bg:   #e8eef8; --node-blue-border:   #3060c0;
+  --node-pink-bg:   #fce8fc; --node-pink-border:   #b030a0;
+  --shadow: 0 2px 12px rgba(12,8,28,0.14);
+}
+
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Barlow Semi Condensed', sans-serif; color: var(--text); user-select: none; }
+
+#canvas-container {
+  position: fixed; inset: 0;
+  overflow: hidden;
+  cursor: default;
+}
+
+#world {
+  position: absolute;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  transform-origin: 0 0;
+}
+
+#edges-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#edges-svg path.edge-path {
+  fill: none;
+  stroke: #7b84a3;
+  stroke-width: 1.5px;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+#edges-svg path.edge-path:hover { stroke: #f06820 !important; stroke-width: 2px !important; }
+#edges-svg path.edge-path.selected { stroke-width: 2.5px !important; filter: drop-shadow(0 0 4px currentColor); }
+
+#edges-svg .edge-label-bg { fill: var(--bg); }
+#edges-svg .edge-label-text {
+  fill: var(--text-muted);
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: 13px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  cursor: pointer;
+}
+#edges-svg .edge-label-text.selected { fill: var(--accent); }
+#edges-svg .edge-label-hit {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+/* Node */
+.node {
+  position: absolute;
+  min-width: 80px;
+  width: max-content;
+  max-width: 300px;
+  padding: 8px 14px;
+  background: var(--node-default-bg);
+  border: 1.5px solid var(--node-default-border);
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: break-word;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  left: 0; top: 0;
+  transform: translate(-50%, -50%);   /* JS composes translate(x,y) in front of this */
+  will-change: transform;
+  transition: border-color 0.12s, box-shadow 0.12s, opacity 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+}
+.node:hover { border-color: #6a5a9a; }
+.node.selected {
+  border-color: var(--node-selected-border) !important;
+  box-shadow: 0 0 0 2px rgba(240,104,32,0.3), var(--shadow);
+}
+.node.editing { cursor: text; overflow: visible; white-space: nowrap; }
+.node input.node-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+  text-align: center;
+  min-width: 40px;
+}
+
+/* Color variants */
+.node[data-color=purple] { background: var(--node-purple-bg); border-color: var(--node-purple-border); }
+.node[data-color=green]  { background: var(--node-green-bg);  border-color: var(--node-green-border); }
+.node[data-color=amber]  { background: var(--node-amber-bg);  border-color: var(--node-amber-border); }
+.node[data-color=coral]  { background: var(--node-coral-bg);  border-color: var(--node-coral-border); }
+.node[data-color=teal]   { background: var(--node-teal-bg);   border-color: var(--node-teal-border); }
+.node[data-color=blue]   { background: var(--node-blue-bg);   border-color: var(--node-blue-border); }
+.node[data-color=pink]   { background: var(--node-pink-bg);   border-color: var(--node-pink-border); }
+/* Default-coloured nodes take a tint of their branch colour */
+.node[data-color=default] { border-color: color-mix(in srgb, var(--branch, var(--node-default-border)) 75%, var(--node-default-border)); }
+.node[data-color=default]:hover { border-color: var(--branch, #6a5a9a); }
+
+/* Tidy layout motion */
+.node.node-enter { animation: node-in 0.24s cubic-bezier(.2,.8,.3,1); }
+@keyframes node-in { from { opacity: 0; scale: 0.55; } to { opacity: 1; scale: 1; } }
+.node.folded-away { display: none; }
+.node.dragging { opacity: 0.88; z-index: 5; box-shadow: 0 8px 28px rgba(0,0,0,0.45); cursor: grabbing; }
+.node.drop-target {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 4px rgba(240,104,32,0.35), var(--shadow);
+}
+#edges-svg .reparent-ghost {
+  fill: none; stroke: var(--accent); stroke-width: 2.5px; stroke-dasharray: 6 5;
+  stroke-linecap: round; opacity: 0.85; pointer-events: none;
+}
+.reparent-ghost-box {
+  position: absolute; left: 0; top: 0;
+  border: 2px dashed var(--accent); border-radius: 8px;
+  background: rgba(240,104,32,0.08);
+  pointer-events: none;
+}
+.fold-badge {
+  position: absolute; left: 0; top: 0;
+  min-width: 26px; padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1.5px solid var(--fold, var(--border));
+  color: var(--text);
+  font-size: 12px; font-weight: 600; line-height: 16px; text-align: center;
+  cursor: pointer; box-shadow: var(--shadow);
+  animation: node-in 0.2s ease-out;
+}
+.fold-badge:hover { background: var(--surface2); }
+
+/* Shape variants */
+.node[data-shape=rounded] { border-radius: 24px; }
+.node[data-shape=pill]    { border-radius: 999px; }
+.node[data-shape=circle]  { border-radius: 50%; width: 80px; height: 80px; min-width: 80px; max-width: 80px; padding: 4px; }
+
+/* Text style variants */
+.node[data-fontsize=sm] { font-size: 13px; }
+.node[data-fontsize=lg] { font-size: 20px; }
+.node[data-fontweight=bold]  { font-weight: 700; }
+.node[data-fontstyle=italic] { font-style: italic; }
+
+/* Pinned indicator */
+.node.pinned::after {
+  content: '📌';
+  font-size: 12px;
+  position: absolute;
+  top: 2px; right: 4px;
+  opacity: 0.5;
+}
+
+/* Edge mode highlight */
+.node.edge-candidate {
+  border-color: #3d8c60 !important;
+  box-shadow: 0 0 0 2px rgba(61,140,96,0.35), var(--shadow);
+}
+.node.edge-source {
+  border-color: #c08020 !important;
+  box-shadow: 0 0 0 2px rgba(192,128,32,0.35), var(--shadow);
+}
+.node.edge-target {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(240,104,32,0.5), var(--shadow);
+}
+
+/* Help overlay */
+#help-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  z-index: 900;
+  display: none;
+  align-items: center; justify-content: center;
+}
+#help-overlay.visible { display: flex; }
+#help-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  min-width: 380px; max-width: 520px;
+  box-shadow: var(--shadow);
+  max-height: 80vh; overflow-y: auto;
+}
+.help-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+.help-grid { display: flex; flex-direction: column; gap: 3px; }
+.help-section { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-top: 10px; margin-bottom: 2px; }
+.help-section:first-child { margin-top: 0; }
+.help-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text); }
+.help-row span { color: var(--text-muted); }
+.help-hint { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 14px; }
+kbd {
+  display: inline-block;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* Toolbar */
+#toolbar {
+  position: fixed;
+  top: 50%; left: 12px;
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 3px; align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 6px;
+  box-shadow: var(--shadow);
+  z-index: 100;
+  pointer-events: all;
+}
+.tb-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+  text-align: center;
+}
+.tb-btn:hover { background: var(--surface2); border-color: var(--border); color: var(--text); }
+.tb-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tb-sep { height: 1px; background: var(--border); margin: 2px 0; }
+.tb-label { font-size: 12px; color: var(--text-muted); padding: 4px 0; text-align: center; }
+
+/* Status bar */
+#statusbar {
+  position: fixed;
+  bottom: 12px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  z-index: 100;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+/* Context menu (nodes) */
+#ctx-menu {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  min-width: 190px;
+  box-shadow: var(--shadow);
+  z-index: 500;
+  display: none;
+}
+#ctx-menu.visible { display: block; }
+.ctx-item {
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  color: var(--text);
+  transition: background 0.1s;
+}
+.ctx-item:hover { background: var(--surface2); }
+.ctx-item.danger:hover { background: #3a1818; color: #f08080; }
+.ctx-item .ctx-icon { width: 16px; text-align: center; font-size: 14px; }
+.ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+.ctx-section { padding: 4px 12px 2px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.ctx-colors { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 12px; }
+.ctx-color-dot {
+  width: 18px; height: 18px; border-radius: 50%;
+  cursor: pointer; border: 2px solid transparent;
+  transition: border-color 0.12s;
+}
+.ctx-color-dot:hover { border-color: #fff; }
+.ctx-color-dot.active { border-color: #fff; }
+.ctx-shapes { display: flex; gap: 4px; padding: 4px 12px 6px; }
+.ctx-shape-btn {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.1s;
+}
+.ctx-icons { display: flex; flex-wrap: wrap; gap: 3px; padding: 4px 10px 6px; }
+.ctx-icon-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: 1px solid transparent;
+  background: none; cursor: pointer; font-size: 15px; line-height: 1; color: var(--text-muted);
+}
+.ctx-icon-btn:hover { background: var(--surface2); }
+.ctx-icon-btn.active { border-color: var(--accent); }
+.ctx-shape-btn:hover { border-color: var(--accent); color: var(--text); }
+.ctx-shape-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(240,104,32,0.15); }
+
+/* Text style controls in context menu */
+.ctx-text-row { display: flex; gap: 4px; padding: 4px 12px 6px; align-items: center; }
+.ctx-text-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 3px 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.1s;
+  font-family: inherit;
+}
+.ctx-text-btn:hover { border-color: var(--accent); color: var(--text); }
+.ctx-text-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(240,104,32,0.15); }
+.ctx-text-btn.bold { font-weight: 700; }
+.ctx-text-btn.italic { font-style: italic; }
+
+/* Edge inspector panel */
+#edge-panel {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-width: 240px;
+  box-shadow: var(--shadow);
+  z-index: 300;
+  display: none;
+  pointer-events: all;
+}
+#edge-panel.visible { display: block; }
+#edge-panel h4 {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px;
+}
+#edge-label-field {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 10px;
+  outline: none;
+  margin-bottom: 8px;
+}
+#edge-label-field:focus { border-color: var(--accent); }
+.edge-panel-row { display: flex; gap: 4px; align-items: center; margin-bottom: 6px; }
+.edge-panel-label { font-size: 12px; color: var(--text-muted); width: 60px; flex-shrink: 0; }
+.ep-color-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  cursor: pointer; border: 2px solid transparent;
+  transition: border-color 0.1s;
+}
+.ep-color-dot:hover { border-color: #fff; }
+.ep-color-dot.active { border-color: #fff; }
+.ep-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.ep-btn:hover { border-color: var(--accent); color: var(--text); }
+.ep-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(240,104,32,0.15); }
+.ep-close {
+  position: absolute; top: 8px; right: 10px;
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 14px; padding: 0;
+}
+.ep-close:hover { color: var(--text); }
+#edge-panel { position: fixed; }
+
+/* Find modal */
+#find-modal {
+  position: fixed;
+  top: 80px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  width: 320px;
+  box-shadow: var(--shadow);
+  z-index: 600;
+  display: none;
+}
+#find-modal.visible { display: block; }
+#find-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+}
+#find-input:focus { border-color: var(--accent); }
+#find-results {
+  margin-top: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.find-result {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.find-result:hover, .find-result.highlighted { background: var(--surface2); }
+
+/* Settings panel */
+#settings-panel {
+  position: fixed;
+  right: 12px; top: 60px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  width: 220px;
+  box-shadow: var(--shadow);
+  z-index: 100;
+  display: none;
+}
+#settings-panel.visible { display: block; }
+#settings-panel h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px; }
+.setting-row { margin-bottom: 12px; }
+.setting-row label { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; margin-bottom: 4px; }
+.setting-row label span { color: var(--text); font-family: 'IBM Plex Mono', monospace; }
+.setting-row input[type=range] { width: 100%; accent-color: var(--accent); }
+
+/* Mode indicator */
+#mode-indicator {
+  position: fixed;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(192,128,32,0.9);
+  color: #fff;
+  font-size: 12px; font-weight: 600;
+  padding: 5px 16px;
+  border-radius: 20px;
+  z-index: 100;
+  display: none;
+  pointer-events: none;
+}
+#mode-indicator.visible { display: block; }
+
+/* Edge label floating input (used when creating new edges) */
+#edge-label-input-wrap {
+  position: fixed;
+  display: none;
+  z-index: 400;
+}
+#edge-label-input-wrap.visible { display: block; }
+#edge-label-input {
+  background: var(--surface);
+  border: 1.5px solid var(--accent);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: 12px;
+  padding: 4px 10px;
+  outline: none;
+  width: 160px;
+  text-align: center;
+}
+
+/* Notification toast */
+#toast {
+  position: fixed;
+  bottom: 50px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 12px;
+  color: var(--text);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+#toast.show { opacity: 1; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.tb-btn.shared { border-color: var(--accent); color: var(--accent); }
+#export-menu {
+  position: fixed; display: none; z-index: 60; min-width: 200px; padding: 4px 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
+}
+#export-menu.visible { display: block; }
+#share-menu {
+  position: fixed; display: none; z-index: 60; min-width: 220px; padding: 4px 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow);
+}
+#share-menu.visible { display: block; }
+#share-menu .share-url { padding: 6px 12px 8px; font-size: 12px; color: var(--text-muted); word-break: break-all; user-select: text; }
+.tb-btn.busy { opacity: 0.6; }
+/* Published view-only page: no editing tools */
+body.view-only #toolbar, body.view-only #edge-panel, body.view-only #ctx-menu,
+body.view-only #settings-panel, body.view-only #export-menu, body.view-only #share-menu { display: none !important; }
+body.view-only .node { cursor: grab; }
+#recent-modal {
+  position: fixed; inset: 0; z-index: 90; display: none; align-items: flex-start; justify-content: center;
+  padding-top: 14vh; background: rgba(0,0,0,0.35);
+}
+#recent-modal.visible { display: flex; }
+#recent-modal .recent-box {
+  width: min(520px, 90vw); max-height: 60vh; overflow: auto; padding: 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow);
+}
+#recent-modal .recent-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+#recent-modal .recent-row { display: flex; flex-direction: column; padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+#recent-modal .recent-row span { font-size: 15px; color: var(--text); }
+#recent-modal .recent-row small { font-size: 11px; color: var(--text-muted); }
+#recent-modal .recent-row.highlighted, #recent-modal .recent-row:hover { background: var(--surface2); }
+#recent-modal .recent-row.current span::after { content: '  (open now)'; color: var(--text-muted); font-size: 12px; }
+#recent-modal .recent-empty, #recent-modal .recent-hint { font-size: 12px; color: var(--text-muted); padding: 6px 10px; }
+#view-badge {
+  position: fixed; left: 14px; top: 12px; z-index: 40; padding: 6px 12px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 14px; box-shadow: var(--shadow);
+}
+#view-badge small { color: var(--text-muted); margin-left: 8px; }
+
+/* J: Find search-hit highlight */
+.node.search-hit {
+  border-color: #f0c040 !important;
+  box-shadow: 0 0 0 2px rgba(240,192,64,0.35), var(--shadow);
+}
+
+/* H: Drag-to-edge handle cursor */
+.node.edge-drag-handle { cursor: crosshair; }
+
+/* I: Rubber-band selection rect */
+#selection-rect {
+  position: fixed;
+  border: 1.5px solid var(--accent);
+  background: rgba(240,104,32,0.08);
+  pointer-events: none;
+  display: none;
+}
+
+/* Minimap */
+#minimap {
+  position: fixed;
+  bottom: 44px; right: 12px;
+  width: 160px; height: 110px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 100;
+  cursor: crosshair;
+  box-shadow: var(--shadow);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+#minimap:hover { opacity: 1; }
+#minimap svg { width: 100%; height: 100%; display: block; }
+#minimap-close {
+  position: absolute;
+  top: 3px; right: 4px;
+  background: none; border: none;
+  color: var(--text-muted);
+  font-size: 13px; line-height: 1;
+  cursor: pointer; padding: 2px 5px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 1;
+}
+#minimap:hover #minimap-close { opacity: 1; }
+#minimap-close:hover { background: var(--surface2); color: var(--text); }
+
+/* Edge waypoint handle */
+.edge-waypoint-handle {
+  fill: rgba(240,104,32,0.35);
+  stroke: #f06820;
+  stroke-width: 1.5px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.edge-g:hover .edge-waypoint-handle,
+.edge-waypoint-handle.active { opacity: 1; }
+.edge-waypoint-handle.tree-handle { display: none; }
+
+/* Password modal */
+#pw-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  z-index: 800;
+  display: none;
+  align-items: center; justify-content: center;
+}
+#pw-modal.visible { display: flex; }
+#pw-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  width: 320px;
+  box-shadow: var(--shadow);
+}
+#pw-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+#pw-desc  { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5; }
+.pw-field {
+  width: 100%; display: block;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  margin-bottom: 8px;
+}
+.pw-field:focus { border-color: var(--accent); }
+#pw-error { font-size: 12px; color: #f08080; min-height: 16px; margin-bottom: 10px; }
+#pw-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.pw-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.pw-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pw-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pw-btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+
+</style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <div id="world">
+  </div>
+  <svg id="edges-svg">
+    <defs>
+      <marker id="arr-default" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#7b84a3"/>
+      </marker>
+      <marker id="arr-accent" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#f06820"/>
+      </marker>
+      <marker id="arr-green" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#3d8c60"/>
+      </marker>
+      <marker id="arr-amber" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#c08020"/>
+      </marker>
+      <marker id="arr-coral" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#c04040"/>
+      </marker>
+      <marker id="arr-teal" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#2a8098"/>
+      </marker>
+      <marker id="arr-selected" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#ffffff"/>
+      </marker>
+      <!-- Start markers for bidirectional edges (reversed arrowheads) -->
+      <marker id="arr-start-default" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
+        <path d="M8,0 L8,6 L0,3 z" fill="#7b84a3"/>
+      </marker>
+      <marker id="arr-start-accent" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
+        <path d="M8,0 L8,6 L0,3 z" fill="#f06820"/>
+      </marker>
+      <marker id="arr-start-green" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
+        <path d="M8,0 L8,6 L0,3 z" fill="#3d8c60"/>
+      </marker>
+      <marker id="arr-start-amber" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
+        <path d="M8,0 L8,6 L0,3 z" fill="#c08020"/>
+      </marker>
+      <marker id="arr-start-coral" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
+        <path d="M8,0 L8,6 L0,3 z" fill="#c04040"/>
+      </marker>
+      <marker id="arr-start-teal" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
+        <path d="M8,0 L8,6 L0,3 z" fill="#2a8098"/>
+      </marker>
+      <marker id="arr-start-selected" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="auto">
+        <path d="M8,0 L8,6 L0,3 z" fill="#ffffff"/>
+      </marker>
+    </defs>
+    <g id="edges-world"></g>
+  </svg>
+</div>
+
+<div id="toolbar">
+  <span class="tb-label">Orbis</span>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="App.newMap()" title="New map (Cmd+N)">New</button>
+  <button class="tb-btn" onclick="App.openFile()" title="Open (Cmd+O)">Open</button>
+  <button class="tb-btn" onclick="App.saveFile()" title="Save (Cmd+S)">Save</button>
+  <button class="tb-btn" id="share-btn" onclick="App.share(event)" title="Share a view-only link to this map">Share</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="App.autoArrange()" title="Tidy the whole map and fit it in view">Arrange</button>
+  <button class="tb-btn" onclick="App.fitMap()" title="Fit all nodes in view (F)">Fit</button>
+  <button class="tb-btn" id="physics-btn" onclick="App.togglePhysics()" title="Drift (P): on = nodes float with physics, off = nodes stay put">Drift</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="export-btn" onclick="UI.toggleExportMenu(event)" title="Export or import">Export ▸</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="App.undo()" title="Undo (Cmd+Z)">↩</button>
+  <button class="tb-btn" onclick="App.redo()" title="Redo (Cmd+Shift+Z)">↪</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn active" id="minimap-btn" onclick="App.toggleMinimap()" title="Toggle minimap (M)">Map</button>
+  <button class="tb-btn" id="theme-btn" onclick="App.toggleTheme()" title="Toggle day/night">☀</button>
+  <button class="tb-btn" onclick="UI.toggleSettings()" title="Settings: drift strength, grid snap">⚙</button>
+  <button class="tb-btn" onclick="document.getElementById('help-overlay').classList.toggle('visible')" title="Keyboard shortcuts (?)">?</button>
+</div>
+
+<div id="share-menu">
+  <div class="share-url" id="share-menu-url"></div>
+  <div class="ctx-item" onclick="App.shareAction('copy')">Copy link</div>
+  <div class="ctx-item" onclick="App.shareAction('update')">Update now</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="App.shareAction('stop')">Stop sharing</div>
+</div>
+
+<div id="export-menu">
+  <div class="ctx-item" onclick="UI.exportAction('png')">Picture (PNG)</div>
+  <div class="ctx-item" onclick="UI.exportAction('pdf')">PDF</div>
+  <div class="ctx-item" onclick="UI.exportAction('svg')">Vector (SVG)</div>
+  <div class="ctx-item" onclick="UI.exportAction('md')">Outline (Markdown)</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="UI.exportAction('import-md')">Import outline (Markdown)…</div>
+</div>
+
+<div id="mode-indicator"></div>
+<div id="statusbar"></div>
+
+<!-- Node context menu -->
+<div id="ctx-menu">
+  <div class="ctx-section">Text</div>
+  <div class="ctx-text-row">
+    <button class="ctx-text-btn" data-fontsize="sm" onclick="App.setFontSize('sm')">S</button>
+    <button class="ctx-text-btn" data-fontsize="md" onclick="App.setFontSize('md')">M</button>
+    <button class="ctx-text-btn" data-fontsize="lg" onclick="App.setFontSize('lg')">L</button>
+    <div style="flex:1"></div>
+    <button class="ctx-text-btn bold" id="ctx-bold-btn" onclick="App.toggleFontWeight()">B</button>
+    <button class="ctx-text-btn italic" id="ctx-italic-btn" onclick="App.toggleFontStyle()">I</button>
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-section">Color</div>
+  <div class="ctx-colors" id="ctx-colors"></div>
+  <div class="ctx-section">Shape</div>
+  <div class="ctx-shapes" id="ctx-shapes">
+    <button class="ctx-shape-btn" data-shape="rect" onclick="App.setShape('rect')">Rect</button>
+    <button class="ctx-shape-btn" data-shape="rounded" onclick="App.setShape('rounded')">Round</button>
+    <button class="ctx-shape-btn" data-shape="pill" onclick="App.setShape('pill')">Pill</button>
+    <button class="ctx-shape-btn" data-shape="circle" onclick="App.setShape('circle')">Circle</button>
+  </div>
+  <div class="ctx-section">Icon</div>
+  <div class="ctx-icons" id="ctx-icons"></div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="App.ctxAction('pin')"><span class="ctx-icon">📌</span><span id="ctx-pin-label">Pin node</span></div>
+  <div class="ctx-item" onclick="App.ctxAction('fold')"><span class="ctx-icon">▸</span>Fold / unfold branch</div>
+  <div class="ctx-item" onclick="App.ctxAction('duplicate')"><span class="ctx-icon">⧉</span>Duplicate</div>
+  <div class="ctx-item" onclick="App.ctxAction('edge')"><span class="ctx-icon">→</span>Connect to…</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="App.ctxAction('delete')"><span class="ctx-icon">✕</span>Delete node</div>
+</div>
+
+<!-- Edge inspector panel -->
+<div id="edge-panel">
+  <button class="ep-close" onclick="UI.closeEdgePanel()">✕</button>
+  <h4>Edge</h4>
+  <input id="edge-label-field" type="text" placeholder="relationship label…" autocomplete="off">
+  <div class="edge-panel-row">
+    <span class="edge-panel-label">Color</span>
+    <div id="ep-colors" style="display:flex;gap:5px;"></div>
+  </div>
+  <div class="edge-panel-row">
+    <span class="edge-panel-label">Thickness</span>
+    <button class="ep-btn" data-thickness="thin" onclick="App.setEdgeThickness('thin')">Thin</button>
+    <button class="ep-btn" data-thickness="normal" onclick="App.setEdgeThickness('normal')">Normal</button>
+    <button class="ep-btn" data-thickness="thick" onclick="App.setEdgeThickness('thick')">Thick</button>
+  </div>
+  <div class="edge-panel-row">
+    <span class="edge-panel-label">Style</span>
+    <button class="ep-btn" id="ep-dash-btn" onclick="App.toggleEdgeDash()">Dashed</button>
+  </div>
+  <div class="edge-panel-row">
+    <span class="edge-panel-label">Direction</span>
+    <button class="ep-btn" id="ep-bidir-btn" onclick="App.toggleEdgeBidir()">⟷ Bidir</button>
+    <button class="ep-btn" id="ep-swap-btn" onclick="App.swapEdgeDirection()">⇄ Swap</button>
+  </div>
+  <div class="edge-panel-row" style="margin-bottom:0">
+    <span class="edge-panel-label"></span>
+    <button class="ep-btn" style="color:#f08080;border-color:#c04040" onclick="App.deleteSelectedEdge()">Delete edge</button>
+  </div>
+</div>
+
+<!-- Find modal -->
+<div id="find-modal">
+  <input id="find-input" type="text" placeholder="Find node…" autocomplete="off">
+  <div id="find-results"></div>
+</div>
+
+<!-- Physics settings -->
+<div id="settings-panel">
+  <h3>Drift (physics)</h3>
+  <div class="setting-row">
+    <label>Repulsion <span id="val-repulsion">8000</span></label>
+    <input type="range" id="sl-repulsion" min="1000" max="20000" step="100" value="8000" oninput="App.updatePhysics('repulsion',+this.value)">
+  </div>
+  <div class="setting-row">
+    <label>Link distance <span id="val-linkDistance">180</span></label>
+    <input type="range" id="sl-linkDistance" min="60" max="400" step="10" value="180" oninput="App.updatePhysics('linkDistance',+this.value)">
+  </div>
+  <div class="setting-row">
+    <label>Link strength <span id="val-linkStrength">0.4</span></label>
+    <input type="range" id="sl-linkStrength" min="0.05" max="1.0" step="0.05" value="0.4" oninput="App.updatePhysics('linkStrength',+this.value)">
+  </div>
+  <div class="setting-row">
+    <label>Damping <span id="val-damping">0.75</span></label>
+    <input type="range" id="sl-damping" min="0.5" max="0.99" step="0.01" value="0.75" oninput="App.updatePhysics('damping',+this.value)">
+  </div>
+  <div style="height:1px;background:var(--border);margin:8px 0"></div>
+  <h3 style="margin-bottom:8px">Grid</h3>
+  <div class="setting-row" style="margin-bottom:6px">
+    <label style="align-items:center">Grid snap <span id="val-gridsnap">Off</span>
+      <input type="checkbox" id="cb-gridsnap" onchange="App.toggleGridSnap(this.checked)" style="margin-left:6px;accent-color:var(--accent)">
+    </label>
+  </div>
+  <div class="setting-row" id="gridsize-row" style="display:none">
+    <label>Grid size <span id="val-gridsize">20</span>px</label>
+    <input type="range" id="sl-gridsize" min="5" max="80" step="5" value="20" oninput="App.updateGridSize(+this.value)">
+  </div>
+</div>
+
+<!-- Edge label prompt (new edge creation) -->
+<div id="edge-label-input-wrap">
+  <input id="edge-label-input" type="text" placeholder="relationship label…">
+</div>
+
+
+<!-- Password modal -->
+<div id="pw-modal">
+  <div id="pw-box">
+    <div id="pw-title"></div>
+    <div id="pw-desc"></div>
+    <input class="pw-field" type="password" id="pw-input" placeholder="Password" autocomplete="new-password">
+    <input class="pw-field" type="password" id="pw-confirm" placeholder="Confirm password" autocomplete="new-password">
+    <div id="pw-error"></div>
+    <div id="pw-actions">
+      <button class="pw-btn" id="pw-cancel">Cancel</button>
+      <button class="pw-btn primary" id="pw-ok">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="selection-rect"></div>
+<div id="minimap"><svg id="minimap-svg"></svg><button id="minimap-close" onclick="App.toggleMinimap()" title="Hide minimap">×</button></div>
+
+<script type="module" src="src/main.js"></script>
+<script type="module" src="fs-bridge.js"></script>
+
+<div id="help-overlay">
+  <div id="help-box">
+    <div class="help-title">Keyboard Shortcuts</div>
+    <div class="help-grid">
+      <div class="help-section">Nodes</div>
+      <div class="help-row"><kbd>Tab</kbd><span>Create child</span></div>
+      <div class="help-row"><kbd>Enter</kbd><span>Create sibling</span></div>
+      <div class="help-row"><kbd>Shift</kbd>+<kbd>Enter</kbd><span>Create root node</span></div>
+      <div class="help-row"><kbd>Space</kbd> / <kbd>F2</kbd><span>Edit selected node</span></div>
+      <div class="help-row"><kbd>Esc</kbd><span>Revert edit</span></div>
+      <div class="help-row"><kbd>Del</kbd> / <kbd>Bksp</kbd><span>Delete selected</span></div>
+      <div class="help-row"><kbd>↑ ↓ ← →</kbd><span>Navigate nodes &amp; edges</span></div>
+      <div class="help-row"><kbd>Home</kbd><span>Center on node</span></div>
+      <div class="help-row"><kbd>Shift</kbd>+<kbd>Click</kbd><span>Add to multi-selection</span></div>
+      <div class="help-row"><kbd>.</kbd><span>Fold / unfold branch</span></div>
+      <div class="help-row"><kbd>Drag</kbd><span>Move a branch; drop it on a node to attach it there</span></div>
+      <div class="help-row"><kbd>Right-click</kbd><span>Colour, shape, icon, fold, pin</span></div>
+      <div class="help-section">Edges</div>
+      <div class="help-row"><kbd>Space</kbd> / <kbd>Enter</kbd><span>Edit label of selected edge</span></div>
+      <div class="help-row"><kbd>E</kbd><span>Edge mode (connect)</span></div>
+      <div class="help-row"><kbd>↑ ↓ ← →</kbd><span>Pick target</span></div>
+      <div class="help-row"><kbd>Enter</kbd><span>Confirm connection</span></div>
+      <div class="help-row"><kbd>Esc</kbd><span>Cancel</span></div>
+      <div class="help-row"><kbd>B</kbd><span>Toggle bidirectional</span></div>
+      <div class="help-section">View</div>
+      <div class="help-row"><kbd>F</kbd><span>Fit all nodes</span></div>
+      <div class="help-row"><kbd>Arrange</kbd><span>Tidy the whole map (nothing moves until you click it)</span></div>
+      <div class="help-row"><kbd>P</kbd><span>Toggle drift (physics)</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>+/-</kbd><span>Zoom in / out</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>0</kbd><span>Reset zoom</span></div>
+      <div class="help-row"><kbd>G</kbd><span>Toggle grid snap</span></div>
+      <div class="help-section">File</div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>S</kbd><span>Save</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd><span>Open recent (Mac app)</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>F</kbd><span>Find node</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd><span>Redo</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>D</kbd><span>Duplicate</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>A</kbd><span>Focus hub node</span></div>
+      <div class="help-row"><kbd>Ctrl</kbd>+<kbd>C</kbd>/<kbd>X</kbd>/<kbd>V</kbd><span>Copy / Cut / Paste</span></div>
+    </div>
+    <div class="help-hint">Press <kbd>?</kbd> again to close</div>
+  </div>
+</div>
+</body>
+</html>

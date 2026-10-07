@@ -1,0 +1,8 @@
+{
+  "siteRepo": "Documents/my-website",
+  "stagingScript": "deploy-staging.sh",
+  "siteHost": "user@your-server.example.com",
+  "stagingRoot": "/srv/www/html/staging",
+  "shareBaseUrl": "https://example.com/staging/maps-",
+  "mapsDir": "Documents/Orbis Maps"
+}

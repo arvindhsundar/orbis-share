@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Orbis",
+  "version": "1.0.0",
+  "identifier": "com.puttheplayerfirst.orbis",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:3001/concept-map.html",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build:app"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Orbis",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 640,
+        "minHeight": 420,
+        "resizable": true,
+        "center": true,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app"
+    ],
+    "category": "Productivity",
+    "shortDescription": "Concept maps",
+    "copyright": "Put The Player First",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": [
+          "orbis"
+        ],
+        "name": "Orbis Map",
+        "description": "Orbis concept map",
+        "role": "Editor",
+        "rank": "Owner",
+        "contentTypes": [
+          "com.puttheplayerfirst.orbis.map"
+        ],
+        "exportedType": {
+          "identifier": "com.puttheplayerfirst.orbis.map",
+          "conformsTo": [
+            "public.json",
+            "public.data"
+          ]
+        }
+      },
+      {
+        "ext": [
+          "json"
+        ],
+        "name": "JSON",
+        "role": "Editor",
+        "rank": "Alternate"
+      }
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": "-"
+    }
+  }
+}

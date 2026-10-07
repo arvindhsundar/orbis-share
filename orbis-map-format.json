@@ -1,0 +1,77 @@
+{
+  "nodes": [
+    {
+      "id": "node-1",
+      "label": "Central Topic",
+      "x": 0,
+      "y": 0,
+      "color": "default",
+      "shape": "rect"
+    },
+    {
+      "id": "node-2",
+      "label": "Sub-topic A",
+      "x": 0,
+      "y": 0,
+      "color": "teal",
+      "shape": "rect"
+    },
+    {
+      "id": "node-3",
+      "label": "Sub-topic B",
+      "x": 0,
+      "y": 0,
+      "color": "amber",
+      "shape": "rect"
+    },
+    {
+      "id": "node-4",
+      "label": "Detail under A",
+      "x": 0,
+      "y": 0,
+      "color": "green",
+      "shape": "rect"
+    },
+    {
+      "id": "node-5",
+      "label": "Detail under B",
+      "x": 0,
+      "y": 0,
+      "color": "coral",
+      "shape": "rect"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "node-1",
+      "target": "node-2",
+      "label": "includes"
+    },
+    {
+      "id": "edge-2",
+      "source": "node-1",
+      "target": "node-3",
+      "label": "includes"
+    },
+    {
+      "id": "edge-3",
+      "source": "node-2",
+      "target": "node-4",
+      "label": "leads to"
+    },
+    {
+      "id": "edge-4",
+      "source": "node-3",
+      "target": "node-5",
+      "label": "leads to"
+    },
+    {
+      "id": "edge-5",
+      "source": "node-4",
+      "target": "node-5",
+      "label": "connects to",
+      "dash": true
+    }
+  ]
+}

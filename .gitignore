@@ -1,0 +1,8 @@
+node_modules/
+dist/
+test-results/
+
+.DS_Store
+orbis.zip
+# local config with server details - never commit
+orbis.config.json

@@ -1,0 +1,27 @@
+{
+  "name": "orbis",
+  "version": "1.0.0",
+  "description": "Orbis concept maps (web + Mac app)",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "start": "node server.js",
+    "dev": "http-server . -p 3001 --cors -c-1",
+    "build": "node build.js",
+    "tauri": "tauri",
+    "build:app": "node build.js && cp fs-bridge.js dist/fs-bridge.js && cp dist/concept-map.html dist/index.html",
+    "app:dev": "tauri dev",
+    "app:build": "tauri build",
+    "app:install": "tauri build && rm -rf /Applications/Orbis.app && cp -R src-tauri/target/release/bundle/macos/Orbis.app /Applications/ && xattr -dr com.apple.quarantine /Applications/Orbis.app || true"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@tauri-apps/cli": "^2.12.1",
+    "esbuild": "^0.25.0",
+    "http-server": "^14.1.1"
+  }
+}
